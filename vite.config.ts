@@ -5,6 +5,8 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
+    // GitHub Pages project-site base path
+    base: '/hwarang_school-introduce/',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
