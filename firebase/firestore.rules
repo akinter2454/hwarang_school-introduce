@@ -1,0 +1,50 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isTeacher() {
+      return signedIn() && request.auth.token.teacher == true;
+    }
+
+    match /spaces/{spaceId} {
+      // Approved school content is visible to visitors.
+      // Owners can see their own pending/rejected submission; teachers can see all.
+      allow read: if resource.data.status == 'approved'
+                  || isTeacher()
+                  || (signedIn() && resource.data.ownerUid == request.auth.uid);
+
+      // Students can only create a pending submission owned by themselves.
+      allow create: if signedIn()
+                    && request.resource.data.ownerUid == request.auth.uid
+                    && request.resource.data.status == 'pending';
+
+      // Students may edit/resubmit their own non-approved item, but cannot approve it.
+      allow update: if isTeacher()
+                    || (
+                      signedIn()
+                      && resource.data.ownerUid == request.auth.uid
+                      && resource.data.status != 'approved'
+                      && request.resource.data.ownerUid == resource.data.ownerUid
+                      && request.resource.data.status == 'pending'
+                    );
+
+      allow delete: if isTeacher()
+                    || (
+                      signedIn()
+                      && resource.data.ownerUid == request.auth.uid
+                      && resource.data.status != 'approved'
+                    );
+    }
+
+    match /comments/{commentId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+                    && request.resource.data.authorUid == request.auth.uid;
+      allow update, delete: if isTeacher()
+                            || (signedIn() && resource.data.authorUid == request.auth.uid);
+    }
+  }
+}
