@@ -9,11 +9,11 @@
  * - 서비스 계정 private key / Admin SDK JSON은 절대 여기에 넣지 마세요.
  */
 export const firebaseWebConfig = {
-  apiKey: '',
-  authDomain: '',
-  databaseURL: '',
-  projectId: '',
-  storageBucket: '',
-  messagingSenderId: '',
-  appId: '',
+  apiKey: "AIzaSyAip7XbyAu3-z8ZR-zuF5EHlwk2I5fc7ak",
+  authDomain: "hwarangintro.firebaseapp.com",
+  databaseURL: "https://hwarangintro-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "hwarangintro",
+  storageBucket: "hwarangintro.firebasestorage.app",
+  messagingSenderId: "399256115283",
+  appId: "1:399256115283:web:d424f0ced3f45849184ea6"
 };
