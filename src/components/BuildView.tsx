@@ -321,10 +321,10 @@ export const BuildView: React.FC<BuildViewProps> = ({
 
                 <div className="grid grid-cols-4 gap-2.5">
                   {[
-                    { f: 1, icon: '📚', label: '1층 도서관' },
-                    { f: 2, icon: '💻', label: '2층 컴퓨터' },
-                    { f: 3, icon: '🔬', label: '3층 과학실' },
-                    { f: 4, icon: '🏀', label: '4층 체육관' },
+                    { f: 1, icon: '📚', label: '1층' },
+                    { f: 2, icon: '💻', label: '2층' },
+                    { f: 3, icon: '🔬', label: '3층' },
+                    { f: 4, icon: '🏀', label: '4층' },
                   ].map(({ f, icon, label }) => (
                     <button
                       key={f}
