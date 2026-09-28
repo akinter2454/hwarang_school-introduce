@@ -25,7 +25,7 @@ interface BuildViewProps {
   spaces: SpaceItem[];
   editingSpaceId: string | null;
   initialFloor?: FloorNumber;
-  onSaveSpace: (space: Omit<SpaceItem, 'id' | 'createdAt' | 'updatedAt' | 'likes'>, id?: string) => void;
+  onSaveSpace: (space: Omit<SpaceItem, 'id' | 'createdAt' | 'updatedAt' | 'likes'>, id?: string) => void | Promise<void>;
   onCancelEdit: () => void;
   onSelectEditSpace: (id: string) => void;
   onSwitchToExperience: () => void;
@@ -62,6 +62,7 @@ export const BuildView: React.FC<BuildViewProps> = ({
   const [showPresetPicker, setShowPresetPicker] = useState(false);
   const [formErrors, setFormErrors] = useState<string[]>([]);
   const [saveSuccessMsg, setSaveSuccessMsg] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -174,8 +175,11 @@ export const BuildView: React.FC<BuildViewProps> = ({
   };
 
   // Form Submit
-  const handleSubmit = (e: React.FormEvent) => {
+  // Firebase 저장이 실제로 완료된 뒤에만 성공 메시지를 보여줍니다.
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSaving) return;
+
     const errors: string[] = [];
 
     if (!name.trim()) errors.push('장소 이름을 적어주세요! (예: 1층 학교 도서관)');
@@ -195,30 +199,41 @@ export const BuildView: React.FC<BuildViewProps> = ({
     }
 
     setFormErrors([]);
+    setIsSaving(true);
 
-    onSaveSpace(
-      {
-        floor,
-        name: name.trim(),
-        oneLineIntro: oneLineIntro.trim(),
-        description: description.trim(),
-        specialPoint: specialPoint.trim(),
-        usageGuide: usageGuide.trim(),
-        rules: rules.trim(),
-        author: author.trim(),
-        studentGroup: studentGroup.trim(),
-        images,
-        status: 'pending', // Teacher approval required
-      },
-      editingSpaceId || undefined
-    );
+    try {
+      await onSaveSpace(
+        {
+          floor,
+          name: name.trim(),
+          oneLineIntro: oneLineIntro.trim(),
+          description: description.trim(),
+          specialPoint: specialPoint.trim(),
+          usageGuide: usageGuide.trim(),
+          rules: rules.trim(),
+          author: author.trim(),
+          studentGroup: studentGroup.trim(),
+          images,
+          status: 'pending', // Teacher approval required
+        },
+        editingSpaceId || undefined
+      );
 
-    setSaveSuccessMsg(true);
-    setTimeout(() => {
-      setSaveSuccessMsg(false);
-      handleResetForm();
-      setActiveTab('list');
-    }, 1800);
+      setSaveSuccessMsg(true);
+      setTimeout(() => {
+        setSaveSuccessMsg(false);
+        handleResetForm();
+        setActiveTab('list');
+      }, 1800);
+    } catch (error) {
+      console.error('공간 제출 실패', error);
+      setFormErrors([
+        '온라인 저장에 실패했습니다. 인터넷 연결과 Firebase 설정을 확인한 뒤 다시 제출해 주세요.',
+      ]);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const editingSpace = editingSpaceId ? spaces.find((s) => s.id === editingSpaceId) : null;
@@ -642,7 +657,8 @@ export const BuildView: React.FC<BuildViewProps> = ({
                   </button>
                   <button
                     type="submit"
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-black rounded-2xl shadow-md transition-all hover:scale-102"
+                    disabled={isSaving}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-black rounded-2xl shadow-md transition-all hover:scale-102 disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     <PlusCircle className="w-4 h-4" />
                     <span>{editingSpace ? '수정 완료하기 ✨' : '선생님께 제출하기 ✨'}</span>

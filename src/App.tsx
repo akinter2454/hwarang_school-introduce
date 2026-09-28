@@ -152,11 +152,10 @@ export default function App() {
 
     const connect = async () => {
       await ensureAnonymousFirebaseUser();
-
-      // DB가 비어 있는 최초 1회에만 현재 브라우저 자료를 업로드합니다.
-      await seedRealtimeDatabaseIfEmpty(spaces, comments);
       if (disposed) return;
 
+      // 중요: 먼저 실시간 구독부터 시작합니다.
+      // 초기 예시 데이터(seed) 저장에 문제가 생겨도 학생/교사 간 공유 읽기는 계속 동작해야 합니다.
       unsubscribeSpaces = subscribeSpacesRealtime(
         (nextSpaces) => {
           if (!disposed) setSpaces(nextSpaces);
@@ -170,11 +169,31 @@ export default function App() {
         },
         (error) => console.error('댓글 실시간 구독 오류', error)
       );
+
+      // DB가 비어 있는 최초 1회에만 현재 브라우저 자료를 업로드합니다.
+      // 실패하더라도 위 실시간 구독은 유지합니다.
+      try {
+        await seedRealtimeDatabaseIfEmpty(spaces, comments);
+      } catch (seedError) {
+        console.warn('초기 예시 데이터 동기화는 건너뜁니다.', seedError);
+      }
     };
 
     void connect().catch((error) => {
       console.error('Firebase Realtime Database 연결 실패', error);
-      // 연결이 실패해도 기존 화면과 localStorage 데이터로 계속 사용할 수 있습니다.
+      // 기존 버전에서는 이 오류가 콘솔에만 보여 학생이 로컬 저장 성공으로 오해할 수 있었습니다.
+      // 한 세션에 한 번만 사용자에게 알려 실제 공유 저장 실패를 바로 알 수 있게 합니다.
+      const noticeKey = 'school_spaces_firebase_connection_error_notified';
+      try {
+        if (!sessionStorage.getItem(noticeKey)) {
+          sessionStorage.setItem(noticeKey, '1');
+          window.alert(
+            '학교 공유 데이터베이스에 연결하지 못했습니다. 이 상태에서는 다른 기기와 글이 공유되지 않습니다. 인터넷 연결, Firebase 익명 로그인, Realtime Database 규칙을 확인해 주세요.'
+          );
+        }
+      } catch {
+        // sessionStorage가 막힌 환경에서는 콘솔 기록만 남깁니다.
+      }
     });
 
     return () => {
@@ -366,7 +385,7 @@ export default function App() {
     window.scrollTo({top: 0, behavior: 'smooth'});
   };
 
-  const handleSaveSpace = (
+  const handleSaveSpace = async (
     spaceData: Omit<
       SpaceItem,
       'id' | 'createdAt' | 'updatedAt' | 'likes'
@@ -377,7 +396,9 @@ export default function App() {
 
     if (id) {
       const existing = spaces.find((space) => space.id === id);
-      if (!existing) return;
+      if (!existing) {
+        throw new Error('수정할 공간을 찾을 수 없습니다.');
+      }
 
       const updatedSpace: SpaceItem = {
         ...existing,
@@ -386,97 +407,99 @@ export default function App() {
         updatedAt: now,
       };
 
+      // Firebase 모드에서는 서버 저장이 확인된 뒤 화면 상태를 갱신합니다.
+      // 따라서 학생 화면에서 성공으로 보였다면 실제 DB에도 저장된 상태입니다.
+      if (isFirebaseConfigured) {
+        await upsertSpaceRealtime(updatedSpace);
+      }
+
       setSpaces((prev) =>
         prev.map((space) =>
           space.id === id ? updatedSpace : space
         )
       );
-
-      if (isFirebaseConfigured) {
-        runRemote(
-          upsertSpaceRealtime(updatedSpace),
-          '공간 수정'
-        );
-      }
-    } else {
-      const newSpace: SpaceItem = {
-        ...spaceData,
-        id: `space-${Date.now()}-${Math.random()
-          .toString(36)
-          .substr(2, 6)}`,
-        status: 'pending',
-        createdAt: now,
-        updatedAt: now,
-        likes: 0,
-      };
-
-      setSpaces((prev) => [newSpace, ...prev]);
-
-      if (isFirebaseConfigured) {
-        runRemote(
-          upsertSpaceRealtime(newSpace),
-          '공간 등록'
-        );
-      }
+      return;
     }
+
+    const newSpace: SpaceItem = {
+      ...spaceData,
+      id: `space-${Date.now()}-${Math.random()
+        .toString(36)
+        .substr(2, 6)}`,
+      status: 'pending',
+      createdAt: now,
+      updatedAt: now,
+      likes: 0,
+    };
+
+    if (isFirebaseConfigured) {
+      await upsertSpaceRealtime(newSpace);
+    }
+
+    setSpaces((prev) => [newSpace, ...prev]);
   };
 
-  const handleApproveSpace = (id: string) => {
+  const handleApproveSpace = async (id: string) => {
     const updatedAt = new Date().toISOString();
 
-    setSpaces((prev) =>
-      prev.map((s) =>
-        s.id === id
-          ? {
-              ...s,
-              status: 'approved',
-              reviewFeedback: undefined,
-              updatedAt,
-            }
-          : s
-      )
-    );
+    try {
+      if (isFirebaseConfigured) {
+        await reviewSpaceRealtime(id, 'approved');
+      }
 
-    if (isFirebaseConfigured) {
-      runRemote(
-        reviewSpaceRealtime(id, 'approved'),
-        '공간 승인'
+      setSpaces((prev) =>
+        prev.map((s) =>
+          s.id === id
+            ? {
+                ...s,
+                status: 'approved',
+                reviewFeedback: undefined,
+                updatedAt,
+              }
+            : s
+        )
       );
+    } catch (error) {
+      console.error('공간 승인 저장 실패', error);
+      window.alert('승인 내용을 Firebase에 저장하지 못했습니다. 다시 시도해 주세요.');
     }
   };
 
-  const handleRejectSpace = (id: string, feedback: string) => {
+  const handleRejectSpace = async (id: string, feedback: string) => {
     const updatedAt = new Date().toISOString();
 
-    setSpaces((prev) =>
-      prev.map((s) =>
-        s.id === id
-          ? {
-              ...s,
-              status: 'rejected',
-              reviewFeedback: feedback,
-              updatedAt,
-            }
-          : s
-      )
-    );
+    try {
+      if (isFirebaseConfigured) {
+        await reviewSpaceRealtime(id, 'rejected', feedback);
+      }
 
-    if (isFirebaseConfigured) {
-      runRemote(
-        reviewSpaceRealtime(id, 'rejected', feedback),
-        '공간 수정 요청'
+      setSpaces((prev) =>
+        prev.map((s) =>
+          s.id === id
+            ? {
+                ...s,
+                status: 'rejected',
+                reviewFeedback: feedback,
+                updatedAt,
+              }
+            : s
+        )
       );
+    } catch (error) {
+      console.error('공간 수정 요청 저장 실패', error);
+      window.alert('수정 요청을 Firebase에 저장하지 못했습니다. 다시 시도해 주세요.');
     }
   };
 
-  const handleDeleteSpace = (id: string) => {
-    setSpaces((prev) => prev.filter((s) => s.id !== id));
-
-    if (isFirebaseConfigured) {
-      runRemote(
-        deleteSpaceRealtime(id),
-        '공간 삭제'
-      );
+  const handleDeleteSpace = async (id: string) => {
+    try {
+      if (isFirebaseConfigured) {
+        await deleteSpaceRealtime(id);
+      }
+      setSpaces((prev) => prev.filter((s) => s.id !== id));
+    } catch (error) {
+      console.error('공간 삭제 저장 실패', error);
+      window.alert('삭제 내용을 Firebase에 저장하지 못했습니다. 다시 시도해 주세요.');
     }
   };
 

@@ -103,17 +103,34 @@ export async function seedRealtimeDatabaseIfEmpty(
 
   const tasks: Promise<void>[] = [];
 
+  // 중요: 보안 규칙은 /spaces/$spaceId 와 /comments/$commentId 단위로 쓰기를 허용합니다.
+  // 따라서 /spaces 또는 /comments 부모 노드에 한 번에 set()하면 권한 거부가 날 수 있습니다.
+  // 각 항목을 자식 경로에 개별 저장해 규칙과 정확히 맞춥니다.
   if (!spacesSnapshot.exists()) {
-    tasks.push(set(spacesRef, spacesToMap(initialSpaces)));
+    for (const space of initialSpaces) {
+      tasks.push(
+        set(
+          ref(db, `spaces/${space.id}`),
+          cleanForFirebase(space)
+        )
+      );
+    }
   }
 
   if (!commentsSnapshot.exists()) {
-    tasks.push(set(commentsRef, commentsToMap(initialComments)));
+    for (const comment of initialComments) {
+      tasks.push(
+        set(
+          ref(db, `comments/${comment.id}`),
+          cleanForFirebase(comment)
+        )
+      );
+    }
   }
 
   tasks.push(
     update(ref(db, 'meta'), {
-      dataSchemaVersion: 1,
+      dataSchemaVersion: 2,
       lastConnectedAt: new Date().toISOString(),
     })
   );
@@ -167,7 +184,30 @@ export async function upsertSpaceRealtime(space: SpaceItem) {
 export async function replaceAllSpacesRealtime(spaces: SpaceItem[]) {
   const db = requireDatabase();
   await ensureAnonymousFirebaseUser();
-  await set(ref(db, 'spaces'), spacesToMap(spaces));
+
+  // /spaces 부모 노드에 set()하지 않고 자식 항목 단위로 삭제/저장합니다.
+  // 현재 보안 규칙의 /spaces/$spaceId 쓰기 권한과 맞추기 위한 처리입니다.
+  const currentSnapshot = await get(ref(db, 'spaces'));
+  const currentValue = currentSnapshot.val();
+  const currentIds =
+    currentValue && typeof currentValue === 'object'
+      ? Object.keys(currentValue as Record<string, unknown>)
+      : [];
+
+  await Promise.all(
+    currentIds.map((spaceId) =>
+      remove(ref(db, `spaces/${spaceId}`))
+    )
+  );
+
+  await Promise.all(
+    spaces.map((space) =>
+      set(
+        ref(db, `spaces/${space.id}`),
+        cleanForFirebase(space)
+      )
+    )
+  );
 }
 
 export async function deleteSpaceRealtime(spaceId: string) {
