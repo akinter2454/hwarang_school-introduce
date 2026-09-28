@@ -55,7 +55,7 @@ function snapshotValueToSpaces(value: unknown): SpaceItem[] {
     });
 
   // 기존 동작과 유사하게 학생이 새로 작성한 항목은 앞쪽,
-  // 기본 템플릿은 1~4층 순서로 유지합니다.
+  // 기본 템플릿은 1~5층 순서로 유지합니다.
   return result.sort((a, b) => {
     const aTemplate = Boolean(a.isTemplateExample);
     const bTemplate = Boolean(b.isTemplateExample);

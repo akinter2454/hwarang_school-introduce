@@ -63,7 +63,7 @@ export const ExperienceView: React.FC<ExperienceViewProps> = ({
   const [selectedFloor, setSelectedFloor] = useState<FloorNumber | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [showCertificateModal, setShowCertificateModal] = useState(false);
-  const [guestbookFilter, setGuestbookFilter] = useState<'all' | '1' | '2' | '3' | '4' | 'general'>('all');
+  const [guestbookFilter, setGuestbookFilter] = useState<'all' | '1' | '2' | '3' | '4' | '5' | 'general'>('all');
   const [guestbookText, setGuestbookText] = useState('');
   const [guestbookReaction, setGuestbookReaction] = useState<CommentReaction>('💖 추천해요');
 
@@ -93,9 +93,10 @@ export const ExperienceView: React.FC<ExperienceViewProps> = ({
     2: approvedSpaces.filter((s) => s.floor === 2).some((s) => visitedStampIds.includes(s.id)),
     3: approvedSpaces.filter((s) => s.floor === 3).some((s) => visitedStampIds.includes(s.id)),
     4: approvedSpaces.filter((s) => s.floor === 4).some((s) => visitedStampIds.includes(s.id)),
+    5: approvedSpaces.filter((s) => s.floor === 5).some((s) => visitedStampIds.includes(s.id)),
   };
   const stampedFloorCount = Object.values(floorStampedMap).filter(Boolean).length;
-  const isMasterExplorer = stampedFloorCount === 4;
+  const isMasterExplorer = stampedFloorCount === 5;
 
   const currentBuddy = BUDDY_LIST.find((b) => b.id === character.buddyId) || BUDDY_LIST[0];
   const currentHeadwear = HEADWEAR_LIST.find((h) => h.id === character.headwear) || HEADWEAR_LIST[0];
@@ -176,7 +177,7 @@ export const ExperienceView: React.FC<ExperienceViewProps> = ({
             </div>
 
             <p className="text-sm sm:text-base text-slate-800 font-medium leading-relaxed max-w-xl">
-              1층 도서관부터 4층 체육관까지! 친구들이 직접 찰칵 찍은 사진과 비밀 꿀팁을 구경해보세요.
+              1층부터 5층까지! 친구들이 직접 찰칵 찍은 사진과 비밀 꿀팁을 구경해보세요.
               마음에 쏙 드는 장소에 <strong>[방문 도장 쾅! 💮]</strong>을 찍으면 내 캐릭터의 탐험대 등급이 쑥쑥 올라갑니다.
             </p>
 
@@ -190,7 +191,7 @@ export const ExperienceView: React.FC<ExperienceViewProps> = ({
                 className="font-jua inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-slate-950 hover:bg-slate-800 text-amber-300 text-xs sm:text-base shadow-lg transition-all hover:scale-103 whitespace-nowrap"
               >
                 <Award className="w-4 h-4 sm:w-5 sm:h-5 text-amber-300 shrink-0" />
-                <span>내 스탬프 수첩 보기 ({stampedFloorCount}/4)</span>
+                <span>내 스탬프 수첩 보기 ({stampedFloorCount}/5)</span>
               </button>
 
               <button
@@ -216,7 +217,7 @@ export const ExperienceView: React.FC<ExperienceViewProps> = ({
             <div className="relative rounded-3xl overflow-hidden border-4 border-white shadow-2xl bg-white aspect-4/3 sm:aspect-16/10">
               <img
                 src={imgCutaway}
-                alt="우리 학교 4층 입체 단면도"
+                alt="우리 학교 건물 입체 단면도"
                 className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-500"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent" />
@@ -224,7 +225,7 @@ export const ExperienceView: React.FC<ExperienceViewProps> = ({
               {/* Floor Quick Badges on the image */}
               <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white text-xs font-jua">
                 <span className="bg-amber-500 text-slate-950 px-2.5 py-1 rounded-xl shadow-xs">
-                  🏫 4층 건물 한눈에 보기
+                  🏫 학교 건물 한눈에 보기
                 </span>
                 <span className="bg-black/60 px-2 py-1 rounded-xl backdrop-blur-xs font-mono">
                   총 {approvedSpaces.length}개 보물 등록됨
@@ -260,7 +261,7 @@ export const ExperienceView: React.FC<ExperienceViewProps> = ({
         </div>
       </section>
 
-      {/* 2. Interactive Building Cross-Section (4층 건물 입체 단면 탐험대) */}
+      {/* 2. Interactive Building Cross-Section (5층 건물 입체 단면 탐험대) */}
       <section id="explore-anchor" className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
@@ -289,9 +290,17 @@ export const ExperienceView: React.FC<ExperienceViewProps> = ({
           </div>
         </div>
 
-        {/* 4-Story Building Interactive Block Selector */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        {/* 5-Story Building Interactive Block Selector */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
           {[
+            {
+              floor: 5 as FloorNumber,
+              emoji: '🌟',
+              title: '5층의 멋진 공간들',
+              desc: '5층에 있는 다양한 학교 공간을 둘러보세요',
+              accentLight: 'from-rose-400 to-pink-500',
+              tag: '5층 공간 탐험',
+            },
             {
               floor: 4 as FloorNumber,
               emoji: '🏀',
@@ -304,7 +313,7 @@ export const ExperienceView: React.FC<ExperienceViewProps> = ({
               floor: 3 as FloorNumber,
               emoji: '🔬',
               title: '3층의 멋진 공간들',
-              desc: '4층에 있는 다양한 학교 공간과 소개를 둘러보세요',
+              desc: '3층에 있는 다양한 학교 공간과 소개를 둘러보세요',
               accentLight: 'from-amber-400 to-amber-500',
               tag: '3층 공간 탐험',
             },
@@ -402,7 +411,7 @@ export const ExperienceView: React.FC<ExperienceViewProps> = ({
                   {character.name} 대원의 탐험 스탬프 수첩
                 </h3>
                 <span className="font-jua text-xs px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300">
-                  {stampedFloorCount} / 4개 층 완수!
+                  {stampedFloorCount} / 5개 층 완수!
                 </span>
               </div>
               <p className="text-xs sm:text-sm text-slate-600 font-medium mt-0.5">
@@ -432,7 +441,7 @@ export const ExperienceView: React.FC<ExperienceViewProps> = ({
           </div>
         </div>
 
-        {/* Two-Column Passport: Left Character Card + Right 4-Floor Stamps */}
+        {/* Two-Column Passport: Left Character Card + Right 5-Floor Stamps */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
           {/* Left: Customized Character Explorer ID Card (4 cols) */}
           <div className="lg:col-span-4 bg-gradient-to-b from-amber-50 to-orange-50/40 rounded-3xl border-3 border-amber-300 p-5 space-y-4 shadow-2xs relative">
@@ -484,7 +493,7 @@ export const ExperienceView: React.FC<ExperienceViewProps> = ({
             <div className="space-y-1 pt-1">
               <div className="flex items-center justify-between text-[11px] font-jua text-slate-600">
                 <span>탐험 퀘스트 진행도</span>
-                <span className="text-emerald-700">{stampedFloorCount} / 4개 층</span>
+                <span className="text-emerald-700">{stampedFloorCount} / 5개 층</span>
               </div>
               <div className="w-full h-3 bg-slate-200 rounded-full overflow-hidden p-0.5">
                 <div
@@ -498,7 +507,7 @@ export const ExperienceView: React.FC<ExperienceViewProps> = ({
             </div>
           </div>
 
-          {/* Right: 4-Floor Stamps Interactive Grid (8 cols) */}
+          {/* Right: 5-Floor Stamps Interactive Grid (8 cols) */}
           <div className="lg:col-span-8 space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               {[
@@ -533,6 +542,14 @@ export const ExperienceView: React.FC<ExperienceViewProps> = ({
                   emoji: '🏀',
                   color: 'border-purple-300 bg-purple-50',
                   sealText: '4F 활력 💮',
+                },
+                {
+                  floor: 5 as FloorNumber,
+                  name: '5층 도전의 스탬프',
+                  place: '5층의 다양한 학교 공간',
+                  emoji: '🌟',
+                  color: 'border-rose-300 bg-rose-50',
+                  sealText: '5F 도전 💮',
                 },
               ].map((slot) => {
                 const isStamped = floorStampedMap[slot.floor];
@@ -603,7 +620,7 @@ export const ExperienceView: React.FC<ExperienceViewProps> = ({
                   <div className="text-3xl animate-bounce">🏆</div>
                   <div>
                     <h4 className="font-jua text-base sm:text-lg text-slate-950">
-                      축하합니다! 4개 층 보물 도장을 모두 모았습니다!
+                      축하합니다! 5개 층 보물 도장을 모두 모았습니다!
                     </h4>
                     <p className="text-xs text-slate-800 font-medium">
                       {character.name} 대원은 우리 학교의 자랑스러운 [학교 명예 탐험 박사]입니다!
@@ -860,6 +877,7 @@ export const ExperienceView: React.FC<ExperienceViewProps> = ({
               { id: '2', label: '2층 💻' },
               { id: '3', label: '3층 🔬' },
               { id: '4', label: '4층 🏀' },
+              { id: '5', label: '5층 🌟' },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -922,7 +940,7 @@ export const ExperienceView: React.FC<ExperienceViewProps> = ({
               type="text"
               value={guestbookText}
               onChange={(e) => setGuestbookText(e.target.value)}
-              placeholder="예) 1층부터 4층까지 스탬프 다 모았어요! 4층 체육관이 제일 멋져요 🏫✨"
+              placeholder="예) 1층부터 5층까지 스탬프 다 모았어요! 5층 공간도 정말 멋져요 🏫✨"
               className="flex-1 px-4 py-3 text-xs sm:text-sm bg-white border-2 border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 font-medium shadow-2xs"
             />
             <button

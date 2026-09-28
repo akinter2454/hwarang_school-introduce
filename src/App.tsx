@@ -544,6 +544,9 @@ export default function App() {
     4: approvedSpaces
       .filter((s) => s.floor === 4)
       .some((s) => visitedStampIds.includes(s.id)),
+    5: approvedSpaces
+      .filter((s) => s.floor === 5)
+      .some((s) => visitedStampIds.includes(s.id)),
   };
 
   const stampedFloorCount =

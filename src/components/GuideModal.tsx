@@ -45,7 +45,7 @@ export const GuideModal: React.FC<GuideModalProps> = ({ isOpen, onClose, onGoToB
                 <span className="font-jua w-7 h-7 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center text-xs shrink-0">1</span>
                 <div>
                   <p className="font-jua text-slate-900 text-base">소개할 장소 정하기</p>
-                  <p className="text-xs text-slate-600 font-medium mt-0.5">모둠 친구들과 함께 친구들에게 알리고 싶은 특별한 공간(1~4층)을 골라요.</p>
+                  <p className="text-xs text-slate-600 font-medium mt-0.5">모둠 친구들과 함께 친구들에게 알리고 싶은 특별한 공간(1~5층)을 골라요.</p>
                 </div>
               </div>
 

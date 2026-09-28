@@ -95,7 +95,7 @@ export const INITIAL_COMMENTS: SpaceComment[] = [
       expression: 'sparkle',
       themeColor: 'rose',
     },
-    content: '1층부터 4층까지 스탬프 4개 다 모아서 탐험 완료 인증서 받았어요! 우리 학교에 이렇게 재밌는 장소가 많은 줄 몰랐어요 🏫🎉',
+    content: '1층부터 5층까지 스탬프 5개 다 모아서 탐험 완료 인증서 받았어요! 우리 학교에 이렇게 재밌는 장소가 많은 줄 몰랐어요 🏫🎉',
     reactionTag: '💖 추천해요',
     createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
     likes: 21,

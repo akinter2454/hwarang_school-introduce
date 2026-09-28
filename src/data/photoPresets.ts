@@ -8,7 +8,7 @@ import imgGym from '../assets/images/school_gymnasium_hall_1790479825022.jpg';
 export interface PhotoPreset {
   id: string;
   name: string;
-  floor: 1 | 2 | 3 | 4;
+  floor: 1 | 2 | 3 | 4 | 5;
   url: string;
   tag: string;
 }

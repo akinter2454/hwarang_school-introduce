@@ -48,6 +48,16 @@ export const FLOOR_CONFIGS: FloorInfo[] = [
     description: '넓은 강당 겸 체육관, 학교 방송실, 학생자치회실이 있어요.',
     suggestedPlaces: ['체육관 (강당)', '방송실', '학생회실', '다목적실'],
   },
+  {
+    floor: 5,
+    name: '5층 : 우리 학교의 특별한 공간',
+    subtitle: '5층에서 만나는 다양한 배움과 활동 공간',
+    color: 'rose',
+    accentBg: 'bg-rose-500',
+    badgeBg: 'bg-rose-100 text-rose-800 border-rose-300',
+    description: '5층에 있는 다양한 교실과 특별 공간을 직접 찾아 소개해 보세요.',
+    suggestedPlaces: ['5층 교실', '특별실', '동아리실', '학습 공간'],
+  },
 ];
 
 // 각 층별 1개씩 학생들이 참고하기 쉬운 초등학생 맞춤 모범 예시 데이터 (여러 장 사진 포함)
@@ -163,5 +173,14 @@ export const FLOOR_TEMPLATES: Record<number, Partial<SpaceItem>> = {
     specialPoint: '라디오 DJ처럼 마이크에 대고 말하면 학교 모든 교실과 복도 스피커로 내 목소리가 멋지게 퍼져나가요!',
     usageGuide: '선발된 방송부 친구들과 방송 담당 선생님만 출입할 수 있어요. 신청곡이 있다면 방송실 앞 신청함에 넣어주세요.',
     rules: '방송 중 빨간 ON AIR 불이 켜져 있을 땐 절대 문 열지 않기! 고가의 방송 카메라와 버튼을 허락 없이 만지지 않기.',
+  },
+  5: {
+    floor: 5,
+    name: '5층의 특별한 공간',
+    oneLineIntro: '우리 학교 5층에서 친구들에게 소개하고 싶은 특별한 공간',
+    description: '이 공간에서 무엇을 하는지, 누가 이용하는지 친구들이 쉽게 알 수 있도록 소개해 보세요.',
+    specialPoint: '다른 곳과 다른 특징, 친구들에게 알려주고 싶은 장점이나 숨은 꿀팁을 적어보세요.',
+    usageGuide: '언제 이용할 수 있는지, 들어갈 때 지켜야 할 방법이 있는지 적어보세요.',
+    rules: '이 공간을 모두가 안전하고 즐겁게 이용하기 위해 지켜야 할 약속을 적어보세요.',
   },
 };

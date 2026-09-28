@@ -182,7 +182,7 @@ export const CharacterCustomizerModal: React.FC<CharacterCustomizerModalProps> =
                   expression={expression}
                   themeColor={themeColor}
                   size={160}
-                  hasHonorMedal={stampedFloorCount >= 4}
+                  hasHonorMedal={stampedFloorCount >= 5}
                   animate={true}
                 />
 
@@ -208,7 +208,7 @@ export const CharacterCustomizerModal: React.FC<CharacterCustomizerModalProps> =
                     <span>{rankInfo.title}</span>
                   </div>
                   <div className="text-[11px] text-slate-500 mt-0.5">
-                    도장 미션: <strong>{stampedFloorCount} / 4개 층</strong> 정복 중!
+                    도장 미션: <strong>{stampedFloorCount} / 5개 층</strong> 정복 중!
                   </div>
                 </div>
               </div>
@@ -232,7 +232,7 @@ export const CharacterCustomizerModal: React.FC<CharacterCustomizerModalProps> =
 
             {/* Stamp Mission Hint */}
             <div className="p-3 bg-amber-50 rounded-2xl border border-amber-200 text-xs text-amber-900 leading-relaxed font-medium">
-              💡 <strong>스탬프 연동 보상</strong>: 4개 층의 공간을 모두 방문하여 도장을 찍으면 캐릭터 목에 <strong>🏆 [학교 명예 탐험 박사 골드 훈장]</strong>이 자동으로 수여됩니다!
+              💡 <strong>스탬프 연동 보상</strong>: 5개 층의 공간을 모두 방문하여 도장을 찍으면 캐릭터 목에 <strong>🏆 [학교 명예 탐험 박사 골드 훈장]</strong>이 자동으로 수여됩니다!
             </div>
           </div>
 

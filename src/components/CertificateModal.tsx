@@ -44,9 +44,10 @@ export const CertificateModal: React.FC<CertificateModalProps> = ({
     2: approvedSpaces.filter((s) => s.floor === 2).some((s) => visitedStampIds.includes(s.id)),
     3: approvedSpaces.filter((s) => s.floor === 3).some((s) => visitedStampIds.includes(s.id)),
     4: approvedSpaces.filter((s) => s.floor === 4).some((s) => visitedStampIds.includes(s.id)),
+    5: approvedSpaces.filter((s) => s.floor === 5).some((s) => visitedStampIds.includes(s.id)),
   };
   const stampedCount = Object.values(floorStampedMap).filter(Boolean).length;
-  const isComplete = stampedCount >= 4;
+  const isComplete = stampedCount >= 5;
 
   const today = new Date();
   const dateFormatted = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`;
@@ -130,7 +131,7 @@ export const CertificateModal: React.FC<CertificateModalProps> = ({
       // 6. Citation Text
       ctx.fillStyle = '#334155';
       ctx.font = '20px "Apple SD Gothic Neo", "Malgun Gothic", sans-serif';
-      const citation1 = '위 학생은 우리 학교 1층부터 4층까지의 모든 특별 공간을 성실하게 탐험하고,';
+      const citation1 = '위 학생은 우리 학교 1층부터 5층까지의 모든 특별 공간을 성실하게 탐험하고,';
       const citation2 = '친구들과 함께 사진과 꿀팁을 직접 기록하는 아카이빙 미션을 훌륭하게 완수하여';
       const citation3 = '우리 학교를 빛낸 [학교 명예 탐험 박사]로 인정하므로 이 인증서를 수여합니다.';
       ctx.fillText(citation1, width / 2, 325);
@@ -143,11 +144,12 @@ export const CertificateModal: React.FC<CertificateModalProps> = ({
         { num: '2층', name: '컴퓨터·메이커', icon: '💻' },
         { num: '3층', name: '과학실·미술실', icon: '🔬' },
         { num: '4층', name: '체육관·방송실', icon: '🏀' },
+        { num: '5층', name: '5층 공간 탐험', icon: '🌟' },
       ];
 
-      const startX = 220;
-      const cardW = 175;
-      const gap = 20;
+      const startX = 165;
+      const cardW = 165;
+      const gap = 12;
       const cardY = 445;
 
       floorLabels.forEach((fl, idx) => {
@@ -222,7 +224,7 @@ export const CertificateModal: React.FC<CertificateModalProps> = ({
 
   const handleShare = () => {
     navigator.clipboard?.writeText(
-      `🎉 [${character.gradeClass} ${character.name}] 대원이 우리 학교 1~4층 공간 탐험 스탬프를 모두 모아 '학교 명예 탐험 박사' 인증서를 받았습니다! 🏫✨`
+      `🎉 [${character.gradeClass} ${character.name}] 대원이 우리 학교 1~5층 공간 탐험 스탬프를 모두 모아 '학교 명예 탐험 박사' 인증서를 받았습니다! 🏫✨`
     );
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -302,18 +304,19 @@ export const CertificateModal: React.FC<CertificateModalProps> = ({
 
             {/* Citation Statement */}
             <p className="font-jua text-sm sm:text-base text-slate-800 leading-relaxed max-w-xl mx-auto">
-              위 학생은 우리 학교 1층부터 4층까지의 모든 특별 공간을 성실히 탐험하고,
+              위 학생은 우리 학교 1층부터 5층까지의 모든 특별 공간을 성실히 탐험하고,
               친구들과 함께 직접 찍은 사진과 꿀팁을 기록하는 아카이빙 미션을 훌륭하게 완수하여
               우리 학교를 빛낸 <strong className="text-emerald-800 underline decoration-amber-400 decoration-wavy">[학교 명예 탐험 박사]</strong>로 인정하므로 이 인증서를 수여합니다.
             </p>
 
-            {/* 4 Floors Stamped Achievement Bar */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+            {/* 5 Floors Stamped Achievement Bar */}
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-1">
               {[
                 { floor: 1, name: '1층 도서관·보건실', icon: '📚' },
                 { floor: 2, name: '2층 컴퓨터·메이커', icon: '💻' },
                 { floor: 3, name: '3층 과학실·미술실', icon: '🔬' },
                 { floor: 4, name: '4층 체육관·방송실', icon: '🏀' },
+                { floor: 5, name: '5층 공간 탐험', icon: '🌟' },
               ].map((fl) => (
                 <div
                   key={fl.floor}

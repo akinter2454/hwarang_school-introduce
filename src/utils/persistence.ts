@@ -12,7 +12,7 @@ import type {
   BuddyId,
 } from '../types';
 
-const SCHEMA_VERSION = 3;
+const SCHEMA_VERSION = 4;
 
 const KEYS = {
   spacesV2: 'school_spaces_data_v2',
@@ -85,7 +85,7 @@ function normalizeSpace(value: unknown): SpaceItem | null {
   if (!isRecord(value)) return null;
 
   const floor = Number(value.floor);
-  if (![1, 2, 3, 4].includes(floor)) return null;
+  if (![1, 2, 3, 4, 5].includes(floor)) return null;
 
   const id = text(value.id).trim();
   const name = text(value.name).trim();
@@ -99,7 +99,7 @@ function normalizeSpace(value: unknown): SpaceItem | null {
 
   return {
     id,
-    floor: floor as 1 | 2 | 3 | 4,
+    floor: floor as 1 | 2 | 3 | 4 | 5,
     name,
     oneLineIntro: text(value.oneLineIntro),
     description: text(value.description),
@@ -177,7 +177,7 @@ function normalizeComment(value: unknown): SpaceComment | null {
     id,
     spaceId,
     spaceName: typeof value.spaceName === 'string' ? value.spaceName : undefined,
-    floor: [1, 2, 3, 4].includes(floorNumber) ? (floorNumber as 1 | 2 | 3 | 4) : undefined,
+    floor: [1, 2, 3, 4, 5].includes(floorNumber) ? (floorNumber as 1 | 2 | 3 | 4 | 5) : undefined,
     authorName: text(value.authorName, '탐험대원'),
     authorGradeClass: text(value.authorGradeClass, ''),
     avatar: {

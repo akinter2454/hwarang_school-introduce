@@ -218,7 +218,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
             <button
               onClick={onResetToDefaults}
               className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-xl transition-colors border border-rose-200"
-              title="초기 4개 층별 예시 상태로 복원"
+              title="초기 층별 예시 상태로 복원"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>초기 예시로 복원</span>

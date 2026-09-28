@@ -99,7 +99,7 @@ export const TOOL_ITEM_LIST: { id: ToolItemId; name: string; emoji: string; desc
   { id: 'magnifier', name: '보물 돋보기', emoji: '🔍', desc: '손에 꼭 쥐고 숨겨진 학교 보물을 관찰해요!' },
   { id: 'camera', name: '순간포착 카메라', emoji: '📷', desc: '멋진 공간을 찰칵 사진으로 남겨요!' },
   { id: 'flag', name: '탐험대 깃발', emoji: '🚩', desc: '우리 학교 탐험 성공을 알리는 승리의 깃발!' },
-  { id: 'map', name: '비밀 보물지도', emoji: '🗺️', desc: '1~4층 지름길과 숨은 명소를 척척 찾아가요!' },
+  { id: 'map', name: '비밀 보물지도', emoji: '🗺️', desc: '1~5층 지름길과 숨은 명소를 척척 찾아가요!' },
   { id: 'palette', name: '알록달록 팔레트', emoji: '🎨', desc: '예쁜 색깔로 우리 학교를 알록달록 칠해요!' },
   { id: 'trophy', name: '황금 명예 트로피', emoji: '🏆', desc: '열심히 학교를 탐방한 멋진 대원에게 주는 상!' },
   { id: 'ball', name: '열정 농구공', emoji: '🏀', desc: '체육관과 강당에서 친구들과 신나게 뛰놀아요!' },
@@ -171,15 +171,23 @@ export function getExplorerRank(stampedFloorCount: number): ExplorerRankInfo {
         title: '🗺️ 베테랑 탐험대원',
         badge: 'LV.4 베테랑',
         level: 4,
+        progressPercent: 65,
+        message: '3개 층을 정복했어요! 이제 두 층만 더 탐험해 보세요!',
+      };
+    case 4:
+      return {
+        title: '🧭 마스터 후보 탐험대원',
+        badge: 'LV.5 마스터 후보',
+        level: 5,
         progressPercent: 85,
         message: '마지막 1개 층만 더 방문하면 명예 박사 달성!',
       };
-    case 4:
+    case 5:
     default:
       return {
         title: '🏆 학교 명예 탐험 박사',
         badge: 'LV.MAX 명예 박사',
-        level: 5,
+        level: 6,
         progressPercent: 100,
         message: '전 층 탐험 완수! 우리 학교 최고의 탐험 박사입니다! 🎉',
       };

@@ -1,6 +1,6 @@
 {
   "name": "우리 학교 공간 탐방 (School Space Showcase)",
-  "description": "학생들이 직접 촬영하고 소개하는 참여형 학교 공간 탐방 웹페이지. 1~4층 층별 탐방, 학생 제작·수정 스튜디오, 교사 승인 시스템을 제공합니다.",
+  "description": "학생들이 직접 촬영하고 소개하는 참여형 학교 공간 탐방 웹페이지. 1~5층 층별 탐방, 학생 제작·수정 스튜디오, 교사 승인 시스템을 제공합니다.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -137,6 +137,7 @@ export const SpaceDetailModal: React.FC<SpaceDetailModalProps> = ({
     2: 'bg-sky-100 text-sky-800 border-sky-300',
     3: 'bg-amber-100 text-amber-800 border-amber-300',
     4: 'bg-purple-100 text-purple-800 border-purple-300',
+    5: 'bg-rose-100 text-rose-800 border-rose-300',
   }[space.floor];
 
   return (

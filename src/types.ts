@@ -1,4 +1,4 @@
-export type FloorNumber = 1 | 2 | 3 | 4;
+export type FloorNumber = 1 | 2 | 3 | 4 | 5;
 
 export type SpaceStatus = 'approved' | 'pending' | 'rejected';
 
