@@ -1,0 +1,37 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "spaces": {
+      ".read": "auth != null",
+
+      "$spaceId": {
+        ".write": "auth != null",
+
+        ".validate": "!newData.exists() || (newData.hasChildren(['id','floor','name','oneLineIntro','description','specialPoint','usageGuide','rules','author','images','status','createdAt','updatedAt','likes']) && newData.child('id').val() == $spaceId && newData.child('floor').isNumber() && newData.child('floor').val() >= 1 && newData.child('floor').val() <= 4 && newData.child('name').isString() && newData.child('name').val().length <= 100 && newData.child('images').numChildren() <= 10 && newData.child('likes').isNumber() && newData.child('likes').val() >= 0)",
+
+        "images": {
+          "$index": {
+            ".validate": "newData.isString() && newData.val().length <= 260000"
+          }
+        }
+      }
+    },
+
+    "comments": {
+      ".read": "auth != null",
+
+      "$commentId": {
+        ".write": "auth != null",
+
+        ".validate": "!newData.exists() || (newData.hasChildren(['id','spaceId','authorName','authorGradeClass','avatar','content','createdAt','likes']) && newData.child('id').val() == $commentId && newData.child('content').isString() && newData.child('content').val().length <= 1000 && newData.child('likes').isNumber() && newData.child('likes').val() >= 0)"
+      }
+    },
+
+    "meta": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    }
+  }
+}

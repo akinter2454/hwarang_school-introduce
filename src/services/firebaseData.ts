@@ -1,133 +1,232 @@
 import {
-  collection,
-  deleteDoc,
-  doc,
-  onSnapshot,
-  orderBy,
-  query,
-  serverTimestamp,
-  setDoc,
-  updateDoc,
-  where,
-  type Unsubscribe,
-} from 'firebase/firestore';
-import {getDownloadURL, ref, uploadBytes} from 'firebase/storage';
+  get,
+  onValue,
+  ref,
+  remove,
+  runTransaction,
+  set,
+  update,
+} from 'firebase/database';
 import type {SpaceComment, SpaceItem} from '../types';
 import {
   ensureAnonymousFirebaseUser,
-  firebaseStorage,
-  firestoreDb,
+  firebaseRealtimeDb,
   isFirebaseConfigured,
 } from '../lib/firebase';
 
-function requireFirebase() {
-  if (!isFirebaseConfigured || !firestoreDb || !firebaseStorage) {
-    throw new Error('Firebase is not configured. Add VITE_FIREBASE_* values first.');
+type Unsubscribe = () => void;
+
+function requireDatabase() {
+  if (!isFirebaseConfigured || !firebaseRealtimeDb) {
+    throw new Error(
+      'Firebase Realtime Database가 설정되지 않았습니다. src/firebaseConfig.ts를 확인하세요.'
+    );
   }
+  return firebaseRealtimeDb;
 }
 
-function dataUrlToBlob(dataUrl: string): Blob {
-  const [header, body] = dataUrl.split(',');
-  const mime = header.match(/data:(.*?);base64/)?.[1] || 'image/jpeg';
-  const binary = atob(body || '');
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
-  return new Blob([bytes], {type: mime});
+function cleanForFirebase<T>(value: T): T {
+  // Realtime Database는 undefined 값을 저장하지 못하므로 제거합니다.
+  return JSON.parse(JSON.stringify(value)) as T;
 }
 
-export async function uploadSpaceImageDataUrl(dataUrl: string, spaceId: string, index: number) {
-  requireFirebase();
-  const user = await ensureAnonymousFirebaseUser();
-  if (!user || !firebaseStorage) throw new Error('Firebase authentication failed.');
-
-  const blob = dataUrlToBlob(dataUrl);
-  const path = `spaceImages/${user.uid}/${spaceId}/${Date.now()}-${index}.jpg`;
-  const objectRef = ref(firebaseStorage, path);
-  await uploadBytes(objectRef, blob, {contentType: blob.type || 'image/jpeg'});
-  return getDownloadURL(objectRef);
-}
-
-export async function submitSpaceToFirebase(space: SpaceItem) {
-  requireFirebase();
-  const user = await ensureAnonymousFirebaseUser();
-  if (!user || !firestoreDb) throw new Error('Firebase authentication failed.');
-
-  await setDoc(doc(firestoreDb, 'spaces', space.id), {
-    ...space,
-    ownerUid: user.uid,
-    status: 'pending',
-    serverCreatedAt: serverTimestamp(),
-    serverUpdatedAt: serverTimestamp(),
-  });
-}
-
-export async function resubmitSpaceToFirebase(space: SpaceItem) {
-  requireFirebase();
-  const user = await ensureAnonymousFirebaseUser();
-  if (!user || !firestoreDb) throw new Error('Firebase authentication failed.');
-
-  await updateDoc(doc(firestoreDb, 'spaces', space.id), {
-    ...space,
-    ownerUid: user.uid,
-    status: 'pending',
-    serverUpdatedAt: serverTimestamp(),
-  });
-}
-
-export async function deleteOwnSpaceFromFirebase(spaceId: string) {
-  requireFirebase();
-  await ensureAnonymousFirebaseUser();
-  if (!firestoreDb) throw new Error('Firebase is unavailable.');
-  await deleteDoc(doc(firestoreDb, 'spaces', spaceId));
-}
-
-export function subscribeApprovedSpaces(callback: (spaces: SpaceItem[]) => void): Unsubscribe {
-  if (!firestoreDb) throw new Error('Firebase is not configured.');
-  const q = query(
-    collection(firestoreDb, 'spaces'),
-    where('status', '==', 'approved'),
-    orderBy('updatedAt', 'desc')
+function spacesToMap(spaces: SpaceItem[]) {
+  return Object.fromEntries(
+    spaces.map((space) => [space.id, cleanForFirebase(space)])
   );
-  return onSnapshot(q, (snapshot) => {
-    callback(snapshot.docs.map((d) => d.data() as SpaceItem));
+}
+
+function commentsToMap(comments: SpaceComment[]) {
+  return Object.fromEntries(
+    comments.map((comment) => [comment.id, cleanForFirebase(comment)])
+  );
+}
+
+function snapshotValueToSpaces(value: unknown): SpaceItem[] {
+  if (!value || typeof value !== 'object') return [];
+
+  const result = Object.values(value as Record<string, unknown>)
+    .filter((item): item is Record<string, unknown> => {
+      return typeof item === 'object' && item !== null;
+    })
+    .map((item) => {
+      const {ownerUid: _ownerUid, ...space} = item;
+      return space as unknown as SpaceItem;
+    });
+
+  // 기존 동작과 유사하게 학생이 새로 작성한 항목은 앞쪽,
+  // 기본 템플릿은 1~4층 순서로 유지합니다.
+  return result.sort((a, b) => {
+    const aTemplate = Boolean(a.isTemplateExample);
+    const bTemplate = Boolean(b.isTemplateExample);
+
+    if (aTemplate && bTemplate) return a.floor - b.floor;
+    if (aTemplate !== bTemplate) return aTemplate ? 1 : -1;
+
+    return String(b.createdAt || '').localeCompare(String(a.createdAt || ''));
   });
 }
 
-export async function addCommentToFirebase(comment: SpaceComment) {
-  requireFirebase();
-  const user = await ensureAnonymousFirebaseUser();
-  if (!user || !firestoreDb) throw new Error('Firebase authentication failed.');
+function snapshotValueToComments(value: unknown): SpaceComment[] {
+  if (!value || typeof value !== 'object') return [];
 
-  await setDoc(doc(firestoreDb, 'comments', comment.id), {
-    ...comment,
-    authorUid: user.uid,
-    serverCreatedAt: serverTimestamp(),
-  });
-}
-
-export function subscribeComments(callback: (comments: SpaceComment[]) => void): Unsubscribe {
-  if (!firestoreDb) throw new Error('Firebase is not configured.');
-  const q = query(collection(firestoreDb, 'comments'), orderBy('createdAt', 'desc'));
-  return onSnapshot(q, (snapshot) => {
-    callback(snapshot.docs.map((d) => d.data() as SpaceComment));
-  });
+  return Object.values(value as Record<string, unknown>)
+    .filter((item): item is Record<string, unknown> => {
+      return typeof item === 'object' && item !== null;
+    })
+    .map((item) => {
+      const {authorUid: _authorUid, ...comment} = item;
+      return comment as unknown as SpaceComment;
+    })
+    .sort((a, b) =>
+      String(b.createdAt || '').localeCompare(String(a.createdAt || ''))
+    );
 }
 
 /**
- * Teacher-only approval/rejection. Security Rules require a teacher custom claim.
- * The current client PIN (7777) must NOT be used as Firebase authorization.
+ * DB가 비어 있는 최초 1회에만 현재 브라우저의 데이터를 올립니다.
+ * 따라서 기존 localStorage 자료가 있으면 첫 마이그레이션 때 보존됩니다.
  */
-export async function reviewSpaceAsTeacher(
+export async function seedRealtimeDatabaseIfEmpty(
+  initialSpaces: SpaceItem[],
+  initialComments: SpaceComment[]
+) {
+  const db = requireDatabase();
+  await ensureAnonymousFirebaseUser();
+
+  const spacesRef = ref(db, 'spaces');
+  const commentsRef = ref(db, 'comments');
+  const [spacesSnapshot, commentsSnapshot] = await Promise.all([
+    get(spacesRef),
+    get(commentsRef),
+  ]);
+
+  const tasks: Promise<void>[] = [];
+
+  if (!spacesSnapshot.exists()) {
+    tasks.push(set(spacesRef, spacesToMap(initialSpaces)));
+  }
+
+  if (!commentsSnapshot.exists()) {
+    tasks.push(set(commentsRef, commentsToMap(initialComments)));
+  }
+
+  tasks.push(
+    update(ref(db, 'meta'), {
+      dataSchemaVersion: 1,
+      lastConnectedAt: new Date().toISOString(),
+    })
+  );
+
+  await Promise.all(tasks);
+}
+
+export function subscribeSpacesRealtime(
+  callback: (spaces: SpaceItem[]) => void,
+  onError?: (error: Error) => void
+): Unsubscribe {
+  const db = requireDatabase();
+  return onValue(
+    ref(db, 'spaces'),
+    (snapshot) => callback(snapshotValueToSpaces(snapshot.val())),
+    (error) => onError?.(error)
+  );
+}
+
+export function subscribeCommentsRealtime(
+  callback: (comments: SpaceComment[]) => void,
+  onError?: (error: Error) => void
+): Unsubscribe {
+  const db = requireDatabase();
+  return onValue(
+    ref(db, 'comments'),
+    (snapshot) => callback(snapshotValueToComments(snapshot.val())),
+    (error) => onError?.(error)
+  );
+}
+
+export async function upsertSpaceRealtime(space: SpaceItem) {
+  const db = requireDatabase();
+  const user = await ensureAnonymousFirebaseUser();
+  if (!user) throw new Error('Firebase 익명 인증에 실패했습니다.');
+
+  const ownerRef = ref(db, `spaces/${space.id}/ownerUid`);
+  const ownerSnapshot = await get(ownerRef);
+  const ownerUid =
+    typeof ownerSnapshot.val() === 'string' ? ownerSnapshot.val() : user.uid;
+
+  await set(
+    ref(db, `spaces/${space.id}`),
+    cleanForFirebase({
+      ...space,
+      ownerUid,
+    })
+  );
+}
+
+export async function replaceAllSpacesRealtime(spaces: SpaceItem[]) {
+  const db = requireDatabase();
+  await ensureAnonymousFirebaseUser();
+  await set(ref(db, 'spaces'), spacesToMap(spaces));
+}
+
+export async function deleteSpaceRealtime(spaceId: string) {
+  const db = requireDatabase();
+  await ensureAnonymousFirebaseUser();
+  await remove(ref(db, `spaces/${spaceId}`));
+}
+
+export async function reviewSpaceRealtime(
   spaceId: string,
   status: 'approved' | 'rejected',
   reviewFeedback?: string
 ) {
-  requireFirebase();
-  if (!firestoreDb) throw new Error('Firebase is unavailable.');
+  const db = requireDatabase();
+  await ensureAnonymousFirebaseUser();
 
-  await updateDoc(doc(firestoreDb, 'spaces', spaceId), {
+  await update(ref(db, `spaces/${spaceId}`), {
     status,
-    reviewFeedback: reviewFeedback || null,
-    serverUpdatedAt: serverTimestamp(),
+    reviewFeedback: reviewFeedback?.trim() || null,
+    updatedAt: new Date().toISOString(),
+  });
+}
+
+export async function incrementSpaceLikeRealtime(spaceId: string) {
+  const db = requireDatabase();
+  await ensureAnonymousFirebaseUser();
+
+  await runTransaction(ref(db, `spaces/${spaceId}/likes`), (current) => {
+    const value = Number(current);
+    return Number.isFinite(value) ? value + 1 : 1;
+  });
+}
+
+export async function upsertCommentRealtime(comment: SpaceComment) {
+  const db = requireDatabase();
+  const user = await ensureAnonymousFirebaseUser();
+  if (!user) throw new Error('Firebase 익명 인증에 실패했습니다.');
+
+  await set(
+    ref(db, `comments/${comment.id}`),
+    cleanForFirebase({
+      ...comment,
+      authorUid: user.uid,
+    })
+  );
+}
+
+export async function deleteCommentRealtime(commentId: string) {
+  const db = requireDatabase();
+  await ensureAnonymousFirebaseUser();
+  await remove(ref(db, `comments/${commentId}`));
+}
+
+export async function incrementCommentLikeRealtime(commentId: string) {
+  const db = requireDatabase();
+  await ensureAnonymousFirebaseUser();
+
+  await runTransaction(ref(db, `comments/${commentId}/likes`), (current) => {
+    const value = Number(current);
+    return Number.isFinite(value) ? value + 1 : 1;
   });
 }
